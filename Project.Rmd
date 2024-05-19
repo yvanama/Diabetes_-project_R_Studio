@@ -1,0 +1,263 @@
+---
+title: "Project"
+author: "Sri Harsha Sudalagunta"
+date: "`r Sys.Date()`"
+output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Lets load the datasets in to the file
+
+Diabetes Datasets
+
+```{r}
+diabetes_data <- read.csv("C:/Users/SRI HARSHA S/OneDrive - Indiana University/Documents/R/Project Files/diabetes_data.csv")
+print(diabetes_data)
+
+
+```
+
+Lets See the description of the data
+
+```{r}
+
+library(Hmisc)
+describe(diabetes_data)
+```
+
+We can see here that there are no missing values in the data set and we can see that many of them are categorical.
+
+Lets see whether we have enough data of the samples who are diabetic
+
+```{r}
+sum(diabetes_data$Diabetes)/nrow(diabetes_data)
+```
+
+Lets see the visualizations of some of the dataset install.packages("ggplot2")
+
+```{r}
+# create a table with counts of diabetes cases by age group
+age_table <- table(diabetes_data$Diabetes, diabetes_data$Age)
+
+# create a bar chart
+barplot(age_table, main = "Diabetes Cases by Age Group", xlab = "Age Group", ylab = "Number of Cases")
+
+
+
+```
+
+Sex and diabetes
+
+```{r}
+# create a table with counts of diabetes cases by age group
+age_table <- table(diabetes_data$Diabetes, diabetes_data$Sex)
+
+# create a bar chart
+barplot(age_table, main = "Diabetes Cases by Age Group", xlab = "Sex", ylab = "Number of Cases")
+
+```
+
+Lets See our 1st Research Question:
+
+```{r}
+table(diabetes_data$Age, diabetes_data$Diabetes)
+chisq.test(diabetes_data$Age, diabetes_data$Diabetes)
+
+table(diabetes_data$Sex, diabetes_data$Diabetes)
+chisq.test(diabetes_data$Sex, diabetes_data$Diabetes)
+
+table(diabetes_data$HighChol, diabetes_data$Diabetes)
+chisq.test(diabetes_data$HighChol, diabetes_data$Diabetes)
+
+table(diabetes_data$CholCheck, diabetes_data$Diabetes)
+chisq.test(diabetes_data$CholCheck, diabetes_data$Diabetes)
+
+table(diabetes_data$Smoker, diabetes_data$Diabetes)
+chisq.test(diabetes_data$Smoker, diabetes_data$Diabetes)
+
+table(diabetes_data$PhysActivity, diabetes_data$Diabetes)
+chisq.test(diabetes_data$PhysActivity, diabetes_data$Diabetes)
+
+table(diabetes_data$HvyAlcoholConsump, diabetes_data$Diabetes)
+chisq.test(diabetes_data$HvyAlcoholConsump, diabetes_data$Diabetes)
+
+table(diabetes_data$GenHlth, diabetes_data$Diabetes)
+chisq.test(diabetes_data$GenHlth, diabetes_data$Diabetes)
+
+table(diabetes_data$MentHlth, diabetes_data$Diabetes)
+t.test(diabetes_data$MentHlth ~ diabetes_data$Diabetes)
+
+table(diabetes_data$PhysHlth, diabetes_data$Diabetes)
+t.test(diabetes_data$PhysHlth ~ diabetes_data$Diabetes)
+
+```
+
+Interpretation: The results of the Chi-squared tests indicate a significant association between all the predictor variables (Age, Sex, HighChol, CholCheck, Smoker, PhysActivity, HvyAlcoholConsump, and GenHlth) and the response variable (Diabetes), with p-values less than 0.05.
+This suggests that each of these predictor variables is associated with the risk of developing diabetes.
+
+The Welch Two Sample t-test also indicates a significant difference in the mean values of the Mental Health variable between those with diabetes and those without diabetes, with a p-value less than 0.05.
+This suggests that there is a significant difference in mental health between those with diabetes and those without diabetes.
+
+Lets do the logistic regression
+
+```{r}
+# assuming your data frame is named "data" with columns "age", "sex", and "diabetes"
+logit_model <- glm(Diabetes ~ Age + Sex + HighChol + CholCheck + Smoker + PhysActivity + 
+                   HvyAlcoholConsump + GenHlth + MentHlth + PhysHlth, data = diabetes_data, 
+                   family = binomial(link = "logit"))
+summary(logit_model)
+
+
+```
+
+Interpretation
+
+Based on the logistic regression model output, we can make the following findings:
+
+Age is positively associated with the log-odds of having diabetes.
+For every one-unit increase in age, the log-odds of having diabetes increase by 0.165 (or the odds increase by exp(0.165) = 1.18).
+Females are more likely to have diabetes than males, as indicated by the positive coefficient for Sex.
+High cholesterol levels are positively associated with the log-odds of having diabetes.
+For every one-unit increase in HighChol, the log-odds of having diabetes increase by 0.780 (or the odds increase by exp(0.780) = 2.18).
+Having had a cholesterol check is also positively associated with the log-odds of having diabetes, with a slightly smaller effect size than HighChol.
+Engaging in physical activity is negatively associated with the log-odds of having diabetes.
+For every one-unit increase in PhysActivity, the log-odds of having diabetes decrease by 0.230 (or the odds decrease by exp(-0.230) = 0.80).
+Heavy alcohol consumption is negatively associated with the log-odds of having diabetes, indicating that individuals who consume heavy amounts of alcohol are less likely to have diabetes.
+Poor general health (GenHlth) is positively associated with the log-odds of having diabetes.
+Mental health (MentHlth) is not a significant predictor of diabetes, as indicated by its non-significant p-value.
+Physical health (PhysHlth) is negatively associated with the log-odds of having diabetes.
+For every one-unit increase in PhysHlth, the log-odds of having diabetes decrease by 0.005 (or the odds decrease by exp(-0.005) = 0.99).
+Overall, the findings suggest that age, sex, cholesterol levels, physical activity, heavy alcohol consumption, general health, and physical health are all important predictors of diabetes.
+
+```{r}
+install.packages("metafor")
+# Load required package
+library(metafor)
+
+# Create a dataframe with the coefficients and confidence intervals
+coef_df <- data.frame(
+  coef = coef(logit_model),
+  ci_low = confint(logit_model)[,1],
+  ci_high = confint(logit_model)[,2]
+)
+
+# Add a column with variable names
+coef_df$var <- row.names(coef_df)
+
+# Create a forest plot
+forest(coef_df$coef, ci.lb = coef_df$ci_low, ci.ub = coef_df$ci_high,
+       slab = coef_df$var, xlim = c(-6, 2), ilab = cbind(coef_df$coef, coef_df$var))
+
+```
+
+2.  Are there any significant differences in the risk of developing diabetes between different demographic groups?
+
+```{r}
+
+# Load the diabetes data
+diabetes_data <- read.csv("diabetes_data.csv")
+
+# Calculate the number of individuals with diabetes by sex
+diabetes_by_sex <- table(diabetes_data$Sex, diabetes_data$Diabetes)
+
+# Calculate the prevalence of diabetes by sex
+prevalence_by_sex <- diabetes_by_sex["1","0"]/ rowSums(diabetes_by_sex)
+
+# Print the prevalence by sex
+prevalence_by_sex
+
+```
+
+Chi square test for demographic groups age and sex and diabetes.
+
+```{r}
+# Create contingency table
+table <- table(diabetes_data$Diabetes, diabetes_data$Age, diabetes_data$Sex)
+
+# Perform chi-square test
+(table)
+
+```
+
+```{r}
+# Perform chi-square test
+# Convert to 2-dimensional table
+table_2d <- table[, , 1] + table[, , 2]
+
+# Perform chi-square test
+chisq.test(table_2d)
+
+```
+
+```{r}
+# create a contingency table
+Agetable <- table(diabetes_data$Age, diabetes_data$Diabetes)
+
+# perform the chi-square test
+chisq.test(Agetable)
+
+Sextable <- table(diabetes_data$Sex, diabetes_data$Diabetes)
+
+# perform the chi-square test
+chisq.test(Sextable)
+
+
+```
+
+Calculate the mean BMI for individuals with and without diabetes, and compare them.
+You can use a t-test to determine whether the difference in means is statistically significant.
+
+```{r}
+# Subset the data into two groups: individuals with and without diabetes
+diabetes <- subset(diabetes_data, Diabetes == "1")
+no_diabetes <- subset(diabetes_data, Diabetes == "0")
+
+# Calculate the mean BMI for each group
+mean_bmi_diabetes <- mean(diabetes$BMI)
+mean_bmi_no_diabetes <- mean(no_diabetes$BMI)
+
+# Perform a t-test to determine whether the difference in means is significant
+t.test(diabetes$BMI, no_diabetes$BMI)
+
+```
+
+Create a boxplot of BMI for individuals with and without diabetes to visualize any differences in distribution.
+
+```{r}
+# Create a boxplot of BMI for each group
+boxplot(BMI ~ Diabetes, data = diabetes_data)
+
+```
+
+To determine whether there is a significant association between BMI and diabetes prevalence, you can perform a chi-squared test of independence.
+This test will assess whether there is a significant difference in the proportion of individuals with diabetes across different categories of BMI.
+
+```{r}
+# Perform a chi-squared test of independence to determine whether there is a significant association between BMI and diabetes prevalence
+bmitable <- table(diabetes_data$BMI, diabetes_data$Diabetes)
+bmitable
+chisq.test(bmitable)
+```
+
+Research question 3:
+
+What are the most common medical conditions thatco occur with diabetes and are there any significant associations between tese conditions and the diabetes status?
+
+```{r}
+table(diabetes_data$HeartDiseaseorAttack, diabetes_data$Diabetes)
+chisq.test(diabetes_data$HeartDiseaseorAttack, diabetes_data$Diabetes)
+
+table(diabetes_data$Stroke, diabetes_data$Diabetes)
+chisq.test(diabetes_data$Stroke, diabetes_data$Diabetes)
+
+table(diabetes_data$HighBP, diabetes_data$Diabetes)
+chisq.test(diabetes_data$HighBP, diabetes_data$Diabetes)
+
+
+```
