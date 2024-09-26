@@ -1,0 +1,2 @@
+The aim of this research is to investigate the factors that affect a person's risk of developing diabetes and to examine whether there are any significant differences in the risk of developing diabetes across different demographic groups. Additionally, the study seeks to identify the most common comorbidities or medical conditions that co-occur with diabetes in the dataset and examine whether there are significant associations between these conditions and diabetes status.
+
